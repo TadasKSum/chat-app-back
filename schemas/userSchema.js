@@ -17,6 +17,11 @@ const userSchema = new Schema({
     picture: {
         type: String,
         required: true
+    },
+    created: {
+        type: Number,
+        required: true,
+        default: Date.now()
     }
 })
 

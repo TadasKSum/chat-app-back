@@ -11,17 +11,29 @@ const {
     getAllUsers,
     getSingleUser,
     startConversation,
-    deleteConversation
+    deleteConversation,
+    makeMessage,
+    getUserConversations,
+    getSingleTalk
 } = require('../controllers/mainControl')
 
+// New User
 Router.post("/register", registerValid, register)
 Router.post("/login", loginValid, login)
+// Auto-login using cookie
 Router.post("/auto-login", tokenValid, autoLogin)
+// User profile actions
 Router.post("/change-picture", tokenValid, changePicture)
 Router.post("/change-password", tokenValid, changePassValid, changePassword)
+// All users
 Router.get("/all-users", getAllUsers)
+// Single user
 Router.get("/single-user/:userId", getSingleUser)
+// Conversation actions
 Router.post("/start-conversation", tokenValid, startConversation)
 Router.post("/delete-conversation", tokenValid, deleteConversation)
+Router.post("/make-message", tokenValid, makeMessage)
+Router.post("/get-conversations", tokenValid, getUserConversations)
+Router.get("/get-single-talk/:chatId", tokenValid, getSingleTalk)
 
 module.exports = Router

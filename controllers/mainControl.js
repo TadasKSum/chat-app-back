@@ -157,18 +157,36 @@ module.exports = {
                 return res.status(404).json({ success: false, message: 'User you want to talk with does not exist' });
             }
             // Check if conversation already exists
-            const existCheck = await Chat.find({participants: {$all: [user._id, chatter._id]}})
-            if (existCheck) {
+            const existCheck = await Chat.find({
+                $and:
+                    [
+                        {participants: {$elemMatch: {id: user._id}}},
+                        {participants: {$elemMatch: {id: chatter._id}}}
+                    ]
+            })
+            /*const existCheck = await Chat.find({participants: {$all: [user._id, chatter._id]}})*/
+            if (existCheck.length !== 0) {
                 return res.status(404).json({ success: false, message: 'Conversation between these users already exists' });
             }
             // Register new conversation
             const newChat = new Chat({
-                participants: [user._id, chatter._id],
+                participants: [
+                    {
+                        id: user._id,
+                        name: user.username,
+                        avatar: user.picture,
+                    },
+                    {
+                        id: chatter._id,
+                        name: chatter.username,
+                        avatar: chatter.picture,
+                    }
+                ],
                 messages: []
             })
             await newChat.save()
             // Fetch all user conversations
-            const conversations = await Chat.find({participants: {$in: user._id}})
+            const conversations = await Chat.find({participants: {$elemMatch: {id: user._id} }})
             // Send conversation to front
             return res.status(200).json({success: true, data: conversations});
         } catch (error) {
@@ -177,9 +195,107 @@ module.exports = {
         }
     },
     deleteConversation: async (req,res) => {
-        // Check user
-        // Check conversation
-        // Check if user is in conversation
-        // Delete
-    }
+        const {userId} = req.user;
+        const {chatId, request} = req.body;
+        try {
+            if (request !== "delete ThIs") {
+                return res.status(404).json({ success: false, message: 'Bad request' });
+            }
+            // Check user
+            const user = await User.findOne({_id: userId});
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'This user does not exist' });
+            }
+            // Check conversation
+            const conversation = await Chat.findOne({_id: chatId});
+            if (!conversation) {
+                return res.status(404).json({ success: false, message: 'Conversation does not exist' });
+            }
+            // Check if user is in conversation
+            const contains = conversation.participants.some(obj => obj.name === user.username)
+            if (!contains) {
+                return res.status(404).json({ success: false, message: 'This user is not participant of this conversation' });
+            }
+            // Delete
+            await Chat.findOneAndDelete({_id: chatId})
+            const data = await Chat.find({participants: {$elemMatch: {id: userId}}})
+            return res.status(200).json({success: true, message: "Successfully deleted conversation", data});
+        } catch (error) {
+            console.error("Error (mainControl > deleteConversation): ", error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    },
+    makeMessage: async (req, res) => {
+        const {userId} = req.user;
+        const {chatId, time, content, sender, avatar} = req.body;
+        try {
+            // Find user
+            const user = await User.findOne({_id: userId});
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'This user does not exist' });
+            }
+            // Find conversation
+            const conversation = await Chat.findOne({_id: chatId});
+            if (!conversation) {
+                return res.status(404).json({ success: false, message: 'Conversation does not exist' });
+            }
+            // Create new message
+            let newMessage = {
+                senderId: userId,
+                time,
+                content,
+                sender,
+                avatar
+            }
+            // Update
+            const updatedChat = await Chat.findOneAndUpdate(
+                {_id: chatId},
+                {$push: {messages: newMessage}},
+                {new: true}
+            );
+            return res.status(200).json({success: true, data: updatedChat});
+        } catch (error) {
+            console.error("Error (mainControl > makeMessage): ", error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    },
+    getUserConversations: async (req, res) => {
+        const {userId} = req.user;
+        const {request} = req.body;
+        try {
+            if (request !== "fetch me these") {
+                return res.status(404).json({ success: false, message: 'Bad request' });
+            }
+            // Find user
+            const user = await User.findOne({_id: userId});
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'This user does not exist' });
+            }
+            // Find conversations
+            const data = await Chat.find({participants: {$elemMatch: {id: user._id}}})
+            return res.status(200).json({success: true, data});
+        } catch (error) {
+            console.error("Error (mainControl > getUserConversations): ", error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    },
+    getSingleTalk: async (req, res) => {
+        const {userId} = req.user;
+        const {chatId} = req.params;
+        try {
+            const user = await User.findOne({_id: userId});
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'This user does not exist' });
+            }
+            // Find conversation
+            const conversation = await Chat.findOne({_id: chatId});
+            if (!conversation) {
+                return res.status(404).json({ success: false, message: 'Conversation does not exist' });
+            }
+            return res.status(200).json({success: true, data: conversation});
+        } catch (error) {
+            console.error("Error (mainControl > getSingleTalk): ", error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    },
 }

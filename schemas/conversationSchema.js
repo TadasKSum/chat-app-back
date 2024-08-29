@@ -7,6 +7,11 @@ const conversationSchema = new Schema({
         required: true,
         default: [],
     },
+    startDate: {
+        type: Number,
+        required: true,
+        default: Date.now()
+    },
     messages: [
         {
             sender: {
@@ -18,7 +23,7 @@ const conversationSchema = new Schema({
                 required: true,
             },
             time: {
-                type: String,
+                type: Number,
                 required: true,
                 default: Date.now()
             },
@@ -29,11 +34,6 @@ const conversationSchema = new Schema({
             content: {
                 type: String,
                 required: true,
-            },
-            likes: {
-                type: Array,
-                required: true,
-                default: []
             }
         }
     ]
