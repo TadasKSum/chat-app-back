@@ -228,6 +228,9 @@ module.exports = {
     makeMessage: async (req, res) => {
         const {userId} = req.user;
         const {chatId, time, content, sender, avatar} = req.body;
+        if (!chatId || !time || !content || !sender || !avatar) {
+            return res.status(400).json({ success: false, message: 'Bad request' });
+        }
         try {
             // Find user
             const user = await User.findOne({_id: userId});
