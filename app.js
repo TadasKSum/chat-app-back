@@ -4,6 +4,8 @@ const cors = require("cors")
 const mainRouter = require('./routers/mainRouter')
 const mongoose = require('mongoose');
 require("dotenv").config()
+// uid
+const {uid} = require('uid/secure')
 // Socket imports
 const { createServer } = require("http");
 const { Server } = require("socket.io")
@@ -59,6 +61,7 @@ io.use(async (socket, next) => {
     socket.userId = userId;
     socket.username = user.username;
     socket.picture = user.picture;
+    socket.status = "Online";
     next();
 })
 // sockets
@@ -72,16 +75,32 @@ io.on("connection", async (socket) => {
             userId: socket.userId,
             username: socket.username,
             picture: socket.picture,
+            status: socket.status,
         });
     }
     users = currentUsers;
     io.local.emit("users", currentUsers)
+    io.local.emit("message", messages)
     // socket login end
 
     // Socket events
-    socket.on("message", async (message) => {
-        messages.push(message)
-        io.local.emit("chatUpdate", messages)
+    socket.on("message", (newChat) => {
+        newChat.id = uid(16)
+        newChat.likes = []
+        messages.push(newChat)
+        io.emit("message", messages)
+    })
+
+    // Likes handle
+    socket.on("like", (like) => {
+        let index = messages.findIndex(obj => obj.id === like.id)
+        let findThis = messages.find(obj => obj.id === like.id)
+        // Check
+        if (findThis.sender === like.like) return
+        if (findThis.likes.includes(like.like)) return
+        findThis.likes.push(like.like)
+        messages[index] = findThis
+        io.emit("message", messages)
     })
 
     // Disconnect

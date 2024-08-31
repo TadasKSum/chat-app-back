@@ -4,6 +4,7 @@ const User = require('../schemas/userSchema')
 const Chat = require('../schemas/conversationSchema')
 
 module.exports = {
+    // User Actions
     register: async (req, res) => {
         const {username, nickname, passOne} = req.body;
         try {
@@ -75,7 +76,9 @@ module.exports = {
                 nickname: user.nickname,
                 picture: user.picture,
             }
-            return res.status(200).json({success: true, token, data, message: 'Successfully logged in!'});
+            // Fetch user conversations
+            const conversations = await Chat.find({participants: {$elemMatch: {id: user._id}}})
+            return res.status(200).json({success: true, token, data, conversations, message: 'Successfully logged in!'});
         } catch (error) {
             console.error("Error (mainControl > autoLogin): ", error);
             return res.status(500).json({ success: false, message: error.message });
@@ -120,6 +123,7 @@ module.exports = {
             return res.status(500).json({ success: false, message: error.message });
         }
     },
+    // get actions
     getAllUsers: async (req, res) => {
         try {
             const data = await User.find({}, {password: 0});
@@ -142,6 +146,7 @@ module.exports = {
             return res.status(500).json({ success: false, message: error.message });
         }
     },
+    // conversation actions
     startConversation: async (req, res) => {
         const {userId} = req.user;
         const {participant} = req.body;
