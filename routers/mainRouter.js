@@ -14,7 +14,9 @@ const {
     deleteConversation,
     makeMessage,
     getUserConversations,
-    getSingleTalk
+    getSingleTalk,
+    addDescription,
+    addTag
 } = require('../controllers/mainControl')
 
 // New User
@@ -35,5 +37,8 @@ Router.post("/delete-conversation", tokenValid, deleteConversation)
 Router.post("/make-message", tokenValid, makeMessage)
 Router.post("/get-conversations", tokenValid, getUserConversations)
 Router.get("/get-single-talk/:chatId", tokenValid, getSingleTalk)
+// Additional user actions
+Router.post("/add-description", tokenValid, addDescription)
+Router.post("/add-tag", tokenValid, addTag)
 
 module.exports = Router

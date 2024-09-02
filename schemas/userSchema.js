@@ -22,6 +22,16 @@ const userSchema = new Schema({
         type: Number,
         required: true,
         default: Date.now()
+    },
+    description: {
+        type: String,
+        required: false,
+        default: "No description",
+    },
+    tags: {
+        type: Array,
+        required: false,
+        default: []
     }
 })
 

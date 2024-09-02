@@ -53,6 +53,8 @@ module.exports = {
                 username: user.username,
                 nickname: user.nickname,
                 picture: user.picture,
+                tags: user.tags,
+                description: user.description,
             }
 
             return res.status(200).json({success: true, token, data, message: 'Successfully logged in!'});
@@ -75,6 +77,8 @@ module.exports = {
                 username: user.username,
                 nickname: user.nickname,
                 picture: user.picture,
+                tags: user.tags,
+                description: user.description,
             }
             // Fetch user conversations
             const conversations = await Chat.find({participants: {$elemMatch: {id: user._id}}})
@@ -306,4 +310,41 @@ module.exports = {
             return res.status(500).json({ success: false, message: error.message });
         }
     },
+    // Additional user actions
+    addDescription: async (req, res) => {
+        const {userId} = req.user;
+        const {description} = req.body;
+        try {
+            // Check if user exists
+            const user = await User.findOne({ _id: userId });
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'This user does not exist' });
+            }
+            // Find and update, return new
+            const updatedUser = await User.findOneAndUpdate({_id: userId}, {$set: {description}}, {new: true})
+            // Send new picture only
+            return res.status(200).json({success: true, message: 'Successfully changed description', data:{description: updatedUser.description}});
+        } catch (error) {
+            console.error("Error (mainControl > addDescription): ", error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    },
+    addTag: async (req, res) => {
+        const {userId} = req.user;
+        const {tag} = req.body;
+        try {
+            // Check if user exists
+            const user = await User.findOne({ _id: userId });
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'This user does not exist' });
+            }
+            // Find and update, return new
+            const updatedUser = await User.findOneAndUpdate({_id: userId}, {$push: {tags: tag}}, {new: true})
+            // Send new picture only
+            return res.status(200).json({success: true, message: 'Successfully added tag', data: {tags: updatedUser.tags}});
+        } catch (error) {
+            console.error("Error (mainControl > addDescription): ", error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
 }

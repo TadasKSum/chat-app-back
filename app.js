@@ -11,13 +11,12 @@ const { createServer } = require("http");
 const { Server } = require("socket.io")
 // User database access
 const User = require('./schemas/userSchema')
-const res = require("express/lib/response");
 
 const PORT = 2000
 
 mongoose.connect(process.env.MONGO_KEY)
     .then(() => {
-        console.log("Success")
+        console.log("Connected to DB")
     }).catch(err => {
     console.log("Error")
     console.log(err)
@@ -83,7 +82,7 @@ io.on("connection", async (socket) => {
     io.local.emit("message", messages)
     // socket login end
 
-    // Socket events
+    // Message event
     socket.on("message", (newChat) => {
         newChat.id = uid(16)
         newChat.likes = []
