@@ -227,8 +227,8 @@ module.exports = {
             }
             // Delete
             await Chat.findOneAndDelete({_id: chatId})
-            const data = await Chat.find({participants: {$elemMatch: {id: userId}}})
-            return res.status(200).json({success: true, message: "Successfully deleted conversation", data});
+            const data = await Chat.find({participants: {$elemMatch: {id: user._id}}})
+            return res.status(200).json({success: true, message: "Successfully deleted conversation", data: data});
         } catch (error) {
             console.error("Error (mainControl > deleteConversation): ", error);
             return res.status(500).json({ success: false, message: error.message });
